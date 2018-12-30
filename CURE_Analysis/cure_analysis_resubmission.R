@@ -1,6 +1,6 @@
 #################################################
 #	CURE Analysis - Updated for resubmission
-#	November 25, 2018
+#	December 25, 2018
 #	bsub < cure_analysis_resubmission.sh
 #################################################
 
@@ -103,19 +103,6 @@ get.A.mat<-function(dists.mat,d,sig) {
   	h.3<-summand
   	out.mat<-h.1-h.2-h.3
   	return(out.mat)
-#	} else {
-#	  eta<-sum(d==0)/length(d)
-#	  h.1.2<-dists.mat*(1-(1-d)%o%(1-d)/(eta) - (d)%o%(d)/(1-eta))
-#	  phi.21<-2*eta*((1-d)*exp.dist-eta*sig^2)
-#	  phi.22<-(d-(1-eta))/eta^2
-#	  h.2.2<-(phi.21%o%phi.22 + phi.22%o%phi.21)/2
-#	  phi.31<-2*(1-eta)*(d*exp.dist-(1-eta)*sig^2) 
-#	  phi.32<--(1-eta)^(-2)*(d-(1-eta))
-#	  h.3.2<-(phi.31%o%phi.32 + phi.32%o%phi.31)/2
-#	  h.4.2<-sig^2/((1-eta)*eta)*(d-(1-eta))%o%(d-(1-eta))
-#	  out.mat<-h.1.2-h.2.2-h.3.2-h.4.2
-#	  return(out.mat)
-#	}
 }
 
 get.ganova.approx<-function(evals,K,N=1E4){
@@ -125,31 +112,35 @@ get.ganova.approx<-function(evals,K,N=1E4){
 }
 
 #This function does the proposed testing.
-do.proposed.test<-function(n,dd,d.mat,B.mc=2.5E5,return.details=FALSE,return.sample=TRUE,return.sample.size=5000) {
+do.proposed.test<-function(n,d,ddd,d.mat,B.mc=2.5E5,exact=FALSE,return.details=FALSE,return.sample=FALSE,return.sample.size=5000) {
 
 	SS<-mean(d.mat)*n
-	SSE<-0; dd.levels<-sort(unique(dd))
-	for (ii in 1:length(dd.levels)) SSE<-SSE+mean(d.mat[(dd==dd.levels[ii])%o%(dd==dd.levels[ii])==1])*sum(1*dd==1*dd.levels[ii]) 
+	SSE<-0; ddd.levels<-sort(unique(ddd))
+	for (ii in 1:length(ddd.levels)) SSE<-SSE+mean(d.mat[(ddd==ddd.levels[ii])%o%(ddd==ddd.levels[ii])==1])*sum(1*ddd==1*ddd.levels[ii]) 
 	
-	numer<-SS-SSE
-	denom<-SSE/(n-2)
+	numer<-(SS-SSE)/(length(ddd.levels)-1)
+	denom<-SSE/(n-length(ddd.levels))
 	ganova.F<-numer/denom
 
-	A.mat<-get.A.mat(d.mat,dd,sqrt(SS/n))
+	A.mat<-get.A.mat(d.mat,ddd,sqrt(SS/n))
 	e.A.mat<-eigen(A.mat)
 	#evals<-e.A.mat$values[order(abs(e.A.mat$values),decreasing=TRUE)][1:10]
 	evals.all<-e.A.mat$values[order(abs(e.A.mat$values),decreasing=TRUE)]
 	n.evals<-sum(cumsum(evals.all)/sum(evals.all)<0.95)
 	evals<-e.A.mat$values[order(abs(e.A.mat$values),decreasing=TRUE)][1:n.evals]
-	numer.approx<-get.ganova.approx(evals,K=length(evals),N=B.mc)/n+(SS/n)
-	p.val<-mean(ganova.F<numer.approx/denom)
+	
+	ganova.F<-numer/denom
+
+	Q.n<-numer/denom
+	Q.approx<-1+get.ganova.approx(evals,K=length(evals),N=B.mc)/SS/(length(ddd.levels)-1)
+	p.val<-mean(Q.n<Q.approx)
 
 ### RETURN RESULTS
 	if (return.details==TRUE) {
-		return(list(SS=SS,SSE=SSE,numer=numer,denom=denom,ganova.F=ganova.F,evals=evals,evals.all=evals.all,numer.approx=numer.approx,p.val=p.val))
+		return(list(ganova.F=ganova.F,evals=evals,evals.all=evals.all,p.val=p.val))
 	} else {
 		if (return.sample==TRUE) {
-			return(list(ganova.F=ganova.F,p.val=p.val,asympt.est.sample=numer.approx[1:return.sample.size]/denom))
+			return(list(ganova.F=ganova.F,p.val=p.val,asympt.est.sample=Q.approx[1:return.sample.size]))
 		} else {
 			return(list(ganova.F=ganova.F,p.val=p.val))
 		}
@@ -159,7 +150,6 @@ do.proposed.test<-function(n,dd,d.mat,B.mc=2.5E5,return.details=FALSE,return.sam
 
 mat.to.list<-function(mat) lapply(seq_len(ncol(mat)), function(i) mat[,i])
 vec.d<-function(x1,x2) sum(x1-x2)^2
-
 
 #################################################
 #################################################
@@ -174,7 +164,7 @@ list.vecs<-lapply(dti.data,get.upper.tri)
 dti.mat<-matrix(unlist(list.vecs),ncol=length(list.vecs))
 
 proposed.dmat.time<-system.time(d.mat<-get.d.mat.list(mat.to.list(dti.mat),d=vec.d))[[3]]
-proposed.test.time.age<-system.time(proposed.test.age<-do.proposed.test(n=n,dd=(dti.age>med.age),d.mat=d.mat,B.mc=2.5E5,return.details=TRUE))[[3]]+proposed.dmat.time
+proposed.test.time.age<-system.time(proposed.test.age<-do.proposed.test(n=n,ddd=(dti.age>med.age),d.mat=d.mat,B.mc=2.5E5,return.details=TRUE))[[3]]+proposed.dmat.time
 age.factor<-factor(dti.age>med.age)
 competitor.test.time.age<-system.time(adonis.p.age<-adonis(as.dist(d.mat)~age.factor,permutations=2.5E5)$aov[6][[1]][1])[[3]]+proposed.dmat.time
 
@@ -187,7 +177,7 @@ print(paste('The adonis computation time was ', competitor.test.time.age,'...'))
 
 ### ANALYSIS FOR DISEASE EFFECT
 
-proposed.test.time.dx<-system.time(proposed.test.dx<-do.proposed.test(n=n,dd=(dti.group=='ASD'),d.mat=d.mat,B.mc=2.5E5,return.details=TRUE))[[3]]+proposed.dmat.time
+proposed.test.time.dx<-system.time(proposed.test.dx<-do.proposed.test(n=n,ddd=(dti.group=='ASD'),d.mat=d.mat,B.mc=2.5E5,return.details=TRUE))[[3]]+proposed.dmat.time
 competitor.test.time.dx<-system.time(adonis.p.dx<-adonis(as.dist(d.mat)~dti.group,permutations=2.5E5)$aov[6][[1]][1])[[3]]+proposed.dmat.time
 
 print('Disease comparisons:')
@@ -201,7 +191,7 @@ print(paste('The adonis computation time was ', competitor.test.time.dx,'...'))
 ### ANALYSIS FOR AGE EFFECT - 5 GROUPS
 
 dd.age<-(dti.age>quantile(dti.age,0.2,na.rm=TRUE))+(dti.age>quantile(dti.age,0.4,na.rm=TRUE))+(dti.age>quantile(dti.age,0.6,na.rm=TRUE))+(dti.age>quantile(dti.age,0.8,na.rm=TRUE))
-proposed.test.time.age.5<-system.time(proposed.test.age.5<-do.proposed.test(n=n,dd=dd.age,d.mat=d.mat,B.mc=2.5E5,return.details=TRUE))[[3]]+proposed.dmat.time
+proposed.test.time.age.5<-system.time(proposed.test.age.5<-do.proposed.test(n=n,ddd=dd.age,d.mat=d.mat,B.mc=2.5E5,return.details=TRUE))[[3]]+proposed.dmat.time
 age.factor<-factor(dd.age)
 competitor.test.time.age.5<-system.time(adonis.p.age.5<-adonis(as.dist(d.mat)~age.factor,permutations=2.5E5)$aov[6][[1]][1])[[3]]+proposed.dmat.time
 
@@ -212,10 +202,25 @@ print(paste('The adonis p-value is ', adonis.p.age.5 ,'...'))
 print(paste('The computation time was ', proposed.test.time.age.5,'...'))
 print(paste('The adonis computation time was ', competitor.test.time.age.5,'...'))
 
+### ANALYSIS FOR AGE EFFECT - 3 GROUPS
+
+dd.age<-(dti.age>quantile(dti.age,0.33,na.rm=TRUE))+(dti.age>quantile(dti.age,0.66,na.rm=TRUE))
+proposed.test.time.age.3<-system.time(proposed.test.age.3<-do.proposed.test(n=n,ddd=dd.age,d.mat=d.mat,B.mc=2.5E5,return.details=TRUE))[[3]]+proposed.dmat.time
+age.factor<-factor(dd.age)
+competitor.test.time.age.3<-system.time(adonis.p.age.3<-adonis(as.dist(d.mat)~age.factor,permutations=2.5E5)$aov[6][[1]][1])[[3]]+proposed.dmat.time
+
+print('Age comparisons with 3 groups:')
+print(paste('The proposed test p-value is ', proposed.test.age.3$p.val ,'...'))
+print(paste('The adonis p-value is ', adonis.p.age.3 ,'...'))
+
+print(paste('The computation time was ', proposed.test.time.age.3,'...'))
+print(paste('The adonis computation time was ', competitor.test.time.age.3,'...'))
+
+
 
 ### ANALYSIS FOR AGE EFFECT - 10 GROUPS
 dd.age<-(dti.age>quantile(dti.age,0.1,na.rm=TRUE))+(dti.age>quantile(dti.age,0.2,na.rm=TRUE))+(dti.age>quantile(dti.age,0.3,na.rm=TRUE))+(dti.age>quantile(dti.age,0.4,na.rm=TRUE))+(dti.age>quantile(dti.age,0.5,na.rm=TRUE))+(dti.age>quantile(dti.age,0.6,na.rm=TRUE))+(dti.age>quantile(dti.age,0.7,na.rm=TRUE))+(dti.age>quantile(dti.age,0.8,na.rm=TRUE))+(dti.age>quantile(dti.age,0.9,na.rm=TRUE))
-proposed.test.time.age.10<-system.time(proposed.test.age.10<-do.proposed.test(n=n,dd=dd.age,d.mat=d.mat,B.mc=2.5E5,return.details=TRUE))[[3]]+proposed.dmat.time
+proposed.test.time.age.10<-system.time(proposed.test.age.10<-do.proposed.test(n=n,ddd=dd.age,d.mat=d.mat,B.mc=2.5E5,return.details=TRUE))[[3]]+proposed.dmat.time
 age.factor<-factor(dd.age)
 competitor.test.time.age.10<-system.time(adonis.p.age.10<-adonis(as.dist(d.mat)~age.factor,permutations=2.5E5)$aov[6][[1]][1])[[3]]+proposed.dmat.time
 
@@ -226,4 +231,4 @@ print(paste('The adonis p-value is ', adonis.p.age.10 ,'...'))
 print(paste('The computation time was ', proposed.test.time.age.10,'...'))
 print(paste('The adonis computation time was ', competitor.test.time.age.10,'...'))
 
-save(proposed.test.age,adonis.p.age,proposed.test.time.age,competitor.test.time.age,proposed.test.age.5,adonis.p.age.5,proposed.test.time.age.5,competitor.test.time.age.5,proposed.test.age.10,adonis.p.age.10,proposed.test.time.age.10,competitor.test.time.age.10,proposed.test.dx,adonis.p.dx,proposed.test.time.dx,competitor.test.time.dx,file=paste0('CURE_DTI_results_2018-11-18.RData'))
+save(proposed.test.age,adonis.p.age,proposed.test.time.age,competitor.test.time.age,proposed.test.age.3,adonis.p.age.3,proposed.test.time.age.3,proposed.test.age.5,adonis.p.age.5,proposed.test.time.age.5,competitor.test.time.age.5,proposed.test.age.10,adonis.p.age.10,proposed.test.time.age.10,competitor.test.time.age.10,proposed.test.dx,adonis.p.dx,proposed.test.time.dx,competitor.test.time.dx,file=paste0('CURE_DTI_results_2018-12-25.RData'))

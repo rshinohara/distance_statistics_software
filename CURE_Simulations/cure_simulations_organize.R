@@ -35,7 +35,7 @@ for (mu in c(0,7.5,15,30)) {
 	for (k in ks) {
 		i3<-1
 		for (n in c(30,50,100,264)) {
-			existing.files<-list.files(pattern=glob2rx(paste0('ganova_simulations_dti*n',n,'_mu',mu,'_k',k,'.RData')))
+			existing.files<-list.files(pattern=glob2rx(paste0('ganova_simulations_dti_2018*',n,'_mu',mu,'_k',k,'.RData')))
 			load(existing.files[length(existing.files)])
 			try(rejection.rate.proposed[i1,i2,i3]<-mean(unlist(lapply(sims,function(x) x$proposed.test.p))<0.05,na.rm=TRUE))
 			try(rejection.rate.competitor[i1,i2,i3]<-mean(unlist(lapply(sims,function(x) x$adonis.p))<0.05,na.rm=TRUE))
@@ -47,4 +47,4 @@ for (mu in c(0,7.5,15,30)) {
 	}
 	i1<-i1+1
 }
-save(rejection.rate.proposed,rejection.rate.competitor,time.proposed,time.competitor,file=paste0('ganova_2018-12-02_sims_p',round(p,2),'_CURE.RData'))
+save(rejection.rate.proposed,rejection.rate.competitor,time.proposed,time.competitor,file=paste0('ganova_2018-12-29_sims_p',round(p,2),'_CURE.RData'))

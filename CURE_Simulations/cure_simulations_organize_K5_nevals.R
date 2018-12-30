@@ -30,4 +30,4 @@ for (mu in c(0,7.5,15,30)) {
 	}
 	i1<-i1+1
 }
-save(nevals,file=paste0('ganova_2018-12-08_sims_nevals_p',round(p,2),'_CURE_K5.RData'))
+save(nevals,file=paste0('ganova_2018-12-25_sims_nevals_p',round(p,2),'_CURE_K5.RData'))

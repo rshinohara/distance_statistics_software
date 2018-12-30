@@ -1,6 +1,6 @@
 #################################################
 #	Power analysis for GANOVA with graph outcomes.
-#	November 29, 2018
+#	December 19, 2018
 #	bsub < asympt_sims_Fstat_graph_randomG_power.sh
 #################################################
 
@@ -155,14 +155,19 @@ do.proposed.test<-function(n,d,dd,n.1,n.2,sample.g1,sample.g2,d.mat,B.mc,exact=F
 	evals.all<-e.A.mat$values[order(abs(e.A.mat$values),decreasing=TRUE)]
 	n.evals<-sum(cumsum(evals.all)/sum(evals.all)<0.95)
 	evals<-e.A.mat$values[order(abs(e.A.mat$values),decreasing=TRUE)][1:n.evals]
-	numer.approx<-get.ganova.approx(evals,K=length(evals),N=B.mc)/n+(SS/n)
-	p.val<-mean(ganova.F<numer.approx/denom)
+	# p.val<-mean(ganova.F<numer.approx/denom)
+
+	Q.n<-numer/denom
+	# mean(Q.n<1+get.ganova.approx(evals,K=length(evals),N=B.mc)/SS)
+	p.val<-mean(Q.n<1+get.ganova.approx(evals,K=length(evals),N=B.mc)/SS)
+
 
 ### RETURN RESULTS
 	if (return.details==TRUE) {
 		return(list(ganova.F=ganova.F,evals=evals,evals.all=evals.all,p.val=p.val))
 	} else {
 		if (return.sample==TRUE) {
+			numer.approx<-get.ganova.approx(evals,K=length(evals),N=B.mc)/n+(SS/n)
 			return(list(ganova.F=ganova.F,p.val=p.val,asympt.est.sample=numer.approx[1:return.sample.size]/denom))
 		} else {
 			return(list(ganova.F=ganova.F,p.val=p.val))
@@ -227,10 +232,10 @@ for (p in c(1/2,1/3)) {
 
 			set.seed(976741)
 			### DO SIMULATIONS
-			existing.files<-list.files(pattern=glob2rx(paste0('ganova_power_graph_2018-11-28_n',n,'_tau1',tau1,'_tau2',tau2,'_p',round(p,2),'.RData')))
+			existing.files<-list.files(pattern=glob2rx(paste0('ganova_power_graph_2018-12-19_n',n,'_tau1',tau1,'_tau2',tau2,'_p',round(p,2),'.RData')))
 			if (length(existing.files)==0) {	
 				system.time(sims<-mclapply(rep(n,B),do.simulation,p,tau1,tau2,edge.diff,mc.cores=n.cores))
-				save(sims,file=paste('ganova_power_graph_2018-11-28_n',n,'_tau1',tau1,'_tau2',tau2,'_p',round(p,2),'.RData',sep=''))
+				save(sims,file=paste('ganova_power_graph_2018-12-19_n',n,'_tau1',tau1,'_tau2',tau2,'_p',round(p,2),'.RData',sep=''))
 			} else {
 				load(existing.files[length(existing.files)])
 			}
@@ -252,6 +257,6 @@ for (p in c(1/2,1/3)) {
 		}
 		i1<-i1+1
 	}
-	save(power,adonis.power,time.proposed,time.competitor,file=paste0('ganova_power_2018-11-28_power_sims_graphs_p',round(p,2),'.RData'))
+	save(power,adonis.power,time.proposed,time.competitor,file=paste0('ganova_power_2018-12-19_power_sims_graphs_p',round(p,2),'.RData'))
 }
 

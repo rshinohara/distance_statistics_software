@@ -1,6 +1,6 @@
 #################################################
 #	Estimate number of eigenvalues used.
-#	December 8, 2018
+#	December 28, 2018
 #################################################
 
 # ## NOW, compare the distribution of the F-statistic under the null and alternative
@@ -24,7 +24,7 @@ for (p in c(1/2,1/3)) {
 
 			set.seed(976741)
 			### DO SIMULATIONS
-			existing.files<-list.files(pattern=glob2rx(paste0('ganova_power_graph_2018-11-28_n',n,'_tau1',tau1,'_tau2',tau2,'_p',round(p,2),'.RData')))
+			existing.files<-list.files(pattern=glob2rx(paste0('ganova_power_graph_2018-12-19_n',n,'_tau1',tau1,'_tau2',tau2,'_p',round(p,2),'.RData')))
 			load(existing.files[length(existing.files)])
 
 			try(nevals[i1,i2]<-mean(unlist(lapply(sims,function(x) length(x$evals))),na.rm=TRUE))
@@ -36,6 +36,6 @@ for (p in c(1/2,1/3)) {
 		}
 		i1<-i1+1
 	}
-	save(nevals,file=paste0('ganova_power_nevals_2018-12-08_sims_graphs_p',round(p,2),'.RData'))
+	save(nevals,file=paste0('ganova_power_nevals_2018-12-19_sims_graphs_p',round(p,2),'.RData'))
 }
 

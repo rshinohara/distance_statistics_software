@@ -47,4 +47,4 @@ for (mu in c(0,7.5,15,30)) {
 	}
 	i1<-i1+1
 }
-save(rejection.rate.proposed,rejection.rate.competitor,time.proposed,time.competitor,file=paste0('ganova_2018-12-02_sims_p',round(p,2),'_CURE_K5.RData'))
+save(rejection.rate.proposed,rejection.rate.competitor,time.proposed,time.competitor,file=paste0('ganova_2018-12-29_sims_p',round(p,2),'_CURE_K5.RData'))

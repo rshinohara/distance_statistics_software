@@ -1,6 +1,6 @@
 #################################################
 #	Confirmatory analyses for GANOVA aymptotics - marginal distribution of U-statistics
-#	November 28, 2018
+#	December 19, 2018
 #	bsub < asympt_sims_Fstat_randomG.sh
 #################################################
 
@@ -77,8 +77,19 @@ do.simulation<-function(n,p,mu,sig,h,B.mc=2.5E5,return.details=FALSE,return.samp
 	evals.all<-e.A.mat$values[order(abs(e.A.mat$values),decreasing=TRUE)]
 	n.evals<-sum(cumsum(evals.all)/sum(evals.all)<0.95)
 	evals<-e.A.mat$values[order(abs(e.A.mat$values),decreasing=TRUE)][1:n.evals]
-	numer.approx<-get.ganova.approx(evals,K=length(evals),N=B.mc)/n+(SS/n)
-	p.val<-mean(ganova.F<numer.approx/denom)
+
+#	numer.approx<-get.ganova.approx(evals,K=length(evals),N=B.mc)/n+(SS/n)
+#	p.val<-mean(ganova.F<numer.approx/denom)
+
+	# sum.approx<-get.ganova.approx(evals,K=length(evals),N=B.mc)
+	# numer.approx<-SS/n + sum.approx/n
+	# p.val<-mean(ganova.F<numer.approx/denom)
+	# mean(ganova.F<numer.approx/denom)
+
+	Q.n<-numer/denom
+	# mean(Q.n<1+get.ganova.approx(evals,K=length(evals),N=B.mc)/SS)
+	p.val<-mean(Q.n<1+get.ganova.approx(evals,K=length(evals),N=B.mc)/SS)
+
 	stop.time<-proc.time()[3]
 
 ### DO CLASSICAL F-TEST
@@ -89,6 +100,7 @@ do.simulation<-function(n,p,mu,sig,h,B.mc=2.5E5,return.details=FALSE,return.samp
 		return(list(test.time=stop.time-start.time,evals=evals,evals.all=evals.all,ganova.F=ganova.F,p.val=p.val,F.p.val=F.p.val))
 	} else {
 		if (return.sample==TRUE) {
+			numer.approx<-get.ganova.approx(evals,K=length(evals),N=B.mc)/n+(SS/n)
 			return(list(test.time=stop.time-start.time,ganova.F=ganova.F,p.val=p.val,F.p.val=F.p.val,asympt.est.sample=numer.approx[1:return.sample.size]/denom))
 		} else {
 			return(list(test.time=stop.time-start.time,ganova.F=ganova.F,p.val=p.val,F.p.val=F.p.val))
@@ -145,13 +157,13 @@ for (p in c(1/2,1/3)) {
 
 			set.seed(61343)
 		### RUN SIMULATIONS
-			if (!file.exists(paste('ganova_type1err_2018-11-28_dist_',dist.name,'_n',n,'_p',round(p,2),'.RData',sep=''))) {
+			if (!file.exists(paste('ganova_type1err_2018-12-19_dist_',dist.name,'_n',n,'_p',round(p,2),'.RData',sep=''))) {
 				if (dist.name=='euclid') h<-h.euclid
 				if (dist.name=='abs') h<-h.abs
 				system.time(sims<-mclapply(rep(n,B),do.simulation,p,mu,sig,h,mc.cores=n.cores,return.details=TRUE))
-				save(sims,file=paste('ganova_type1err_2018-11-28_dist_',dist.name,'_n',n,'_p',round(p,2),'.RData',sep=''))
+				save(sims,file=paste('ganova_type1err_2018-12-19_dist_',dist.name,'_n',n,'_p',round(p,2),'.RData',sep=''))
 			} else {
-				load(paste('ganova_type1err_2018-11-28_dist_',dist.name,'_n',n,'_p',round(p,2),'.RData',sep=''))
+				load(paste('ganova_type1err_2018-12-19_dist_',dist.name,'_n',n,'_p',round(p,2),'.RData',sep=''))
 			}
 
 		### MAKE PLOTS FOR COMPARISON TO EMPIRICAL NULL DISTRIBUTION
@@ -179,5 +191,5 @@ for (p in c(1/2,1/3)) {
 	print(type1err)
 	print(F.type1err)
 	print(test.times)
-	save(type1err,F.type1err,test.times,file=paste0('ganova_2018-11-28_type1err_sims','_p',round(p,2),'.RData'))
+	save(type1err,F.type1err,test.times,file=paste0('ganova_2018-12-19_type1err_sims','_p',round(p,2),'.RData'))
 }

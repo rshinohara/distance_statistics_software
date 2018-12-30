@@ -1,6 +1,6 @@
 #################################################
 #	Estimate number of eigenvalues used.
-#	December 8, 2018
+#	December 28, 2018
 #################################################
 
 library(RColorBrewer)
@@ -37,7 +37,7 @@ for (p in c(1/2,1/3)) {
 		i2<-1
 		for (n in c(30,50,100,500)) {
 
-			load(paste('ganova_type1err_2018-11-28_dist_',dist.name,'_n',n,'_p',round(p,2),'.RData',sep=''))
+			load(paste('ganova_type1err_2018-12-19_dist_',dist.name,'_n',n,'_p',round(p,2),'.RData',sep=''))
 			try(nevals[i1,i2]<-mean(unlist(lapply(sims,function(x) length(x$evals))),na.rm=TRUE))
 			i2<-i2+1
 		}
@@ -45,5 +45,5 @@ for (p in c(1/2,1/3)) {
 	}
 	
 	print(nevals)
-	save(nevals,file=paste0('ganova_2018-12-08_type1err_nevals_sims','_p',round(p,2),'.RData'))
+	save(nevals,file=paste0('ganova_2018-12-19_type1err_nevals_sims','_p',round(p,2),'.RData'))
 }

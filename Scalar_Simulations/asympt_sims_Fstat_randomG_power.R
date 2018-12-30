@@ -1,6 +1,6 @@
 #################################################
 #	Power analysis for GANOVA with scalar outcomes.
-#	November 28, 2018
+#	December 19, 2018
 #	bsub < asympt_sims_Fstat_randomG_power.sh
 #################################################
 
@@ -79,8 +79,17 @@ do.simulation<-function(n,p,mu,mu2,sig,h,B.mc=2.5E5,return.details=FALSE,return.
 	evals.all<-e.A.mat$values[order(abs(e.A.mat$values),decreasing=TRUE)]
 	n.evals<-sum(cumsum(evals.all)/sum(evals.all)<0.95)
 	evals<-e.A.mat$values[order(abs(e.A.mat$values),decreasing=TRUE)][1:n.evals]
-	numer.approx<-get.ganova.approx(evals,K=length(evals),N=B.mc)/n+(SS/n)
-	p.val<-mean(ganova.F<numer.approx/denom)
+	
+	#numer.approx<-get.ganova.approx(evals,K=length(evals),N=B.mc)/n+(SS/n)
+	#p.val<-mean(ganova.F<numer.approx/denom)
+	
+	#numer.approx<-get.ganova.approx(evals,K=length(evals),N=B.mc)/n+(SS/n)
+	#p.val<-mean(ganova.F<numer.approx/denom)
+
+	Q.n<-numer/denom
+	# mean(Q.n<1+get.ganova.approx(evals,K=length(evals),N=B.mc)/SS)
+	p.val<-mean(Q.n<1+get.ganova.approx(evals,K=length(evals),N=B.mc)/SS)
+
 	stop.time<-proc.time()[3]
 
 ### CONDUCT CLASSICAL F-TEST
@@ -91,6 +100,7 @@ do.simulation<-function(n,p,mu,mu2,sig,h,B.mc=2.5E5,return.details=FALSE,return.
 		return(list(test.time=stop.time-start.time,evals=evals,evals.all=evals.all,ganova.F=ganova.F,p.val=p.val,F.p.val=F.p.val))
 	} else {
 		if (return.sample==TRUE) {
+			numer.approx<-get.ganova.approx(evals,K=length(evals),N=B.mc)/n+(SS/n)
 			return(list(test.time=stop.time-start.time,ganova.F=ganova.F,p.val=p.val,F.p.val=F.p.val,asympt.est.sample=numer.approx[1:return.sample.size]/denom))
 		} else {
 			return(list(test.time=stop.time-start.time,ganova.F=ganova.F,p.val=p.val,F.p.val=F.p.val))
@@ -139,8 +149,8 @@ for (p in c(1/2,1/3)) {
 			
 			set.seed(61343)
 			h<-h.euclid;dist.name<-"euclid"
-			filename<-paste('ganova_power_2018-11-28_n',n,'_sig',sig,dist.name,'_p',round(p,2),'.RData',sep='')
-			existing.files<-list.files(pattern=glob2rx(paste0('ganova_power_2018-11-28_n',n,'_sig',sig,dist.name,'_p',round(p,2),'.RData')))
+			filename<-paste('ganova_power_2018-12-19_n',n,'_sig',sig,dist.name,'_p',round(p,2),'.RData',sep='')
+			existing.files<-list.files(pattern=glob2rx(paste0('ganova_power_2018-12-19_n',n,'_sig',sig,dist.name,'_p',round(p,2),'.RData')))
 			if (length(existing.files)>0) {
 				load(existing.files[length(existing.files)])
 			} else {
@@ -161,8 +171,8 @@ for (p in c(1/2,1/3)) {
 	#######
 
 			h<-h.abs;dist.name<-"abs"
-			filename<-paste('ganova_power_2018-11-28_n',n,'_sig',sig,dist.name,'_p',round(p,2),'.RData',sep='')
-			existing.files<-list.files(pattern=glob2rx(paste0('ganova_power_2018-11-28_n',n,'_sig',sig,dist.name,'_p',round(p,2),'.RData')))
+			filename<-paste('ganova_power_2018-12-19_n',n,'_sig',sig,dist.name,'_p',round(p,2),'.RData',sep='')
+			existing.files<-list.files(pattern=glob2rx(paste0('ganova_power_2018-12-19_n',n,'_sig',sig,dist.name,'_p',round(p,2),'.RData')))
 			if (length(existing.files)>0) {
 				load(existing.files[length(existing.files)])
 			} else {
@@ -184,5 +194,5 @@ for (p in c(1/2,1/3)) {
 	print(anova.power)
 	print(power)
 	print(test.times)
-	save(test.times,power,anova.power,file=paste0('ganova_2018-11-28_power_sims','_p',round(p,2),'.RData'))
+	save(test.times,power,anova.power,file=paste0('ganova_2018-12-19_power_sims','_p',round(p,2),'.RData'))
 }
